@@ -44,7 +44,3 @@ There are several options when you want to share conda environment specification
 To circumvent all the above restrictions, I've created `conda-export` which generates 
 a spec with `--from-history` and adds `pip` packages, trying to minimize the number of 
 packages by including only leaves that no other packages depend on.
-
-## OMG, it uses private pip API!
-
-Yes, it does. Shame on me.
