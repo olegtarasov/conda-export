@@ -9,7 +9,7 @@ from conda.cli.main import init_loggers
 from conda.common.serialize import yaml_safe_dump
 from conda_env.env import from_environment
 
-__version__ = "0.0.1"
+__version__ = "0.0.2"
 
 
 def get_pip_leaves(prefix: str) -> Set[str]:

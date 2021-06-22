@@ -9,7 +9,7 @@ shutil.copyfile("conda-export.py", "conda_export.py")
 
 setup(
     name="conda-export",
-    version="0.0.1",
+    version="0.0.2",
     description="Platform agnostic conda environment export",
     author="Oleg Tarasov",
     url="https://github.com/olegtarasov/conda-export",
