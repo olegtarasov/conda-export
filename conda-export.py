@@ -1,6 +1,7 @@
 import argparse
 import json
 import subprocess
+import sys
 from pathlib import Path
 from typing import Iterable, List, Set
 
@@ -9,11 +10,15 @@ from conda.cli.main import init_loggers
 from conda.common.serialize import yaml_safe_dump
 from conda_env.env import from_environment
 
-__version__ = "0.0.2"
+__version__ = "0.0.3"
 
 
 def get_pip_leaves(prefix: str) -> Set[str]:
-    pip_path = Path(prefix).joinpath("bin").joinpath("pip")
+    pip_path = (
+        Path(prefix).joinpath("Scripts").joinpath("pip.exe")
+        if sys.platform == "win32"
+        else Path(prefix).joinpath("bin").joinpath("pip")
+    )
     if not pip_path.exists():
         raise Exception(f"Failed to find pip binary at {pip_path}")
 
