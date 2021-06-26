@@ -1,9 +1,15 @@
 # conda-export
-An alternative to `conda env export` that helps create portable environment 
-specifications with minimal number of packages.
 
-Resulting specification is similar to `conda env export --from-history`, but also 
-includes packages that were installed using `pip`.
+An alternative to `conda env export` that helps create portable environment 
+specifications with minimum number of packages.
+
+Conda-export creates environment specifications which contain only top-level 
+(non-transient) dependencies. It tries to minimize specific version information and 
+total number of packages, so that the resulting spec maximizes [upgradability](https://pythonspeed.com/articles/conda-dependency-management/#three-kinds-of-dependency-specification).
+At the same time, it respects specific package versions that were used while creating 
+the environment. If, at some point, you installed a package with explicit version (e. g. 
+`conda install pytorch=1.9.0`), `conda-export` will include this specific version in 
+the resulting spec file.
 
 ## Installation
 
@@ -22,25 +28,26 @@ conda-export -n [env name] -f [optional output file]
 
 If `-f` is not specified, dumps the spec to the console.
 
-## Rationale
-There are several options when you want to share conda environment specification:
+## How it works
 
-1. You can use `conda env export -n [name] -f [file]`. This command will give you a 
-   full yaml specification with build versions, which is ideal for reproducibility on 
-   **the same machine**. Unfortunately, this specification will most likely fail on a 
-   different machine or different OS.
-2. `conda env export --no-builds` is a little better, but it still contains specific 
-   versions for all the packages, and such specification can still fail on a different 
-   OS. You can postprocess the spec with a simple regex, removing version info, but 
-   the spec will still contain all the packages that are installed in the environment. 
-   Such a spec proves hard to maintain and reason about, and can still fail on 
-   different OS.
-3. Finally, you can use `conda env export --from-history`, which will give you only 
-   those packages that you explicitly installed with `conda`. Versions will be 
-   included only if you explicitly requested them upon package installation. This 
-   would be the ideal solution, but unfortunately this command will not include 
-   packages that were installed with `pip`.
-   
-To circumvent all the above restrictions, I've created `conda-export` which generates 
-a spec with `--from-history` and adds `pip` packages, trying to minimize the number of 
-packages by including only leaves that no other packages depend on.
+This is the exact algorithm that is used to export environment specifications:
+
+1. `conda-leaves` ← make a dependency graph of all conda packages and select top-level 
+   ones. Exclude packages that were installed with `pip`.
+2. `versioned_hist` ← execute `conda env export --from-history` to get only those 
+   packages that were explicitly installed by user with `conda create` or `conda 
+   install`. Filter packages to leave only those with explicit version specified.
+3. `conda_pip` ← execute `conda env export` and get packages that were installed with 
+   `pip` and not `conda`.
+4. `pip_leaves` ← execute `pip list --not-required` to get top-level packages from 
+   pip's perspective.
+5. Compile the final list as follows:
+    * conda dependencies: `conda_leaves.union(versioned_hist)`
+    * pip dependencies: `conda_pip.intersection(pip_leaves)`
+    
+## What about exactly reproducible environments?
+
+`conda-export` is not suited for creating [reproducible](https://pythonspeed.com/articles/conda-dependency-management/#three-kinds-of-dependency-specification)
+environments. Please use `conda-lock` with environment specs generated from 
+`conda-export` in order to create multi-platform lock files that contain exact package 
+versions.
